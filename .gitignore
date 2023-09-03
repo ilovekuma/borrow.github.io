@@ -2,3 +2,4 @@ test/
 build/
 .architect
 .arch-internal-preview.css
+.DS_Store/
