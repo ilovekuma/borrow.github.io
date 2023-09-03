@@ -46,6 +46,94 @@
         
         
 
+        <label class="label-input100"> 借用狀態 
+          (<img src="./images/green-light.png" width="15px"> 表示可借用&ensp;&ensp;
+           <img src="./images/orange-light.png" width="15px"> 表示已被借用)
+        </label>
+        <div class="wrap-input100 validate-input">
+          <div class="container">
+            <!-- row1 -->
+            <div class="row align-items-center">
+
+              <div class="col-2">
+                <label><p>鑰匙</p></label>
+              </div>
+
+              <div class="col-1">
+                <img id="#key_A_status" src="./images/green-light.png" width="15px">
+                <label><p>A</p></label>
+              </div>
+              <div class="col-1">
+                <img id="#key_B_status" src="./images/green-light.png" width="15px">
+                <label><p>B</p></label>
+              </div>
+              <div class="col-1">
+                <img id="#key_C_status" src="./images/green-light.png" width="15px">
+                <label><p>C</p></label>
+              </div>
+              <div class="col-1">
+                <img id="#key_D_status" src="./images/green-light.png" width="15px">
+                <label><p>D</p></label>
+              </div>
+              <div class="col-1">
+                <img id="#key_E_status" src="./images/green-light.png" width="15px">
+                <label><p>E</p></label>
+              </div>
+              <div class="col-1">
+                <img id="#key_F_status" src="./images/green-light.png" width="15px">
+                <label><p>F</p></label>
+              </div>
+
+            </div>
+            <!-- row2 -->
+            <div class="row align-items-center">
+
+              <div class="col-2">
+                <label><p>轉接頭</p></label>
+              </div>
+
+              <div class="col-1">
+                <img id="#adaptor_1_status" src="./images/green-light.png" width="15px">
+                <label><p>1</p></label>
+              </div>
+              <div class="col-1">
+                <img id="#adaptor_2_status" src="./images/green-light.png" width="15px">
+                <label><p>2</p></label>
+              </div>
+              <div class="col-1">
+                <img id="#adaptor_3_status" src="./images/green-light.png" width="15px">
+                <label><p>3</p></label>
+              </div>
+         
+            </div>
+            <!-- rowˇ -->
+            <div class="row align-items-center">
+
+              <div class="col-2">
+                <label><p>觸控筆</p></label>
+              </div>
+
+              <div class="col-1">
+                <img id="#pen_A_status" src="./images/green-light.png" width="15px">
+                <label><p>A</p></label>
+              </div>
+              <div class="col-1">
+                <img id="#pen_B_status" src="./images/green-light.png" width="15px">
+                <label><p>B</p></label>
+              </div>
+              <div class="col-1">
+                <img id="#pen_C_status" src="./images/green-light.png" width="15px">
+                <label><p>C</p></label>
+              </div>
+         
+            </div>
+
+
+          </div>
+        </div>
+
+
+
         <label class="label-input100" for="email">請選擇欲借用或歸還器材 *</label>
         <div class="wrap-input100 validate-input" data-validate="煩請評分">
           <div class="container">
@@ -223,7 +311,7 @@
       
       <div class="container-contact100-form-btn">
         <div class="col "></div>
-          <button type="button" class="btn btn-outline-secondary " style="width: 30%">  🔒歷史紀錄  </button>
+          <button type="button" id="btnHist" class="btn btn-outline-secondary " style="width: 30%">  🔒歷史紀錄  </button>
         <div class="col "></div>
         
           <button type="submit" class="btn btn-outline-secondary " style="width: 30%">  送出  </button>
@@ -320,9 +408,51 @@
   <!--===============================================================================================-->
   <script src="js/main.js"></script>
   <script>
+    var btnHist = document.getElementById('btnHist');
+    var MD5 = function(d){var r = M(V(Y(X(d),8*d.length)));return r.toLowerCase()};function M(d){for(var _,m="0123456789ABCDEF",f="",r=0;r<d.length;r++)_=d.charCodeAt(r),f+=m.charAt(_>>>4&15)+m.charAt(15&_);return f}function X(d){for(var _=Array(d.length>>2),m=0;m<_.length;m++)_[m]=0;for(m=0;m<8*d.length;m+=8)_[m>>5]|=(255&d.charCodeAt(m/8))<<m%32;return _}function V(d){for(var _="",m=0;m<32*d.length;m+=8)_+=String.fromCharCode(d[m>>5]>>>m%32&255);return _}function Y(d,_){d[_>>5]|=128<<_%32,d[14+(_+64>>>9<<4)]=_;for(var m=1732584193,f=-271733879,r=-1732584194,i=271733878,n=0;n<d.length;n+=16){var h=m,t=f,g=r,e=i;f=md5_ii(f=md5_ii(f=md5_ii(f=md5_ii(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_hh(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_gg(f=md5_ff(f=md5_ff(f=md5_ff(f=md5_ff(f,r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+0],7,-680876936),f,r,d[n+1],12,-389564586),m,f,d[n+2],17,606105819),i,m,d[n+3],22,-1044525330),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+4],7,-176418897),f,r,d[n+5],12,1200080426),m,f,d[n+6],17,-1473231341),i,m,d[n+7],22,-45705983),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+8],7,1770035416),f,r,d[n+9],12,-1958414417),m,f,d[n+10],17,-42063),i,m,d[n+11],22,-1990404162),r=md5_ff(r,i=md5_ff(i,m=md5_ff(m,f,r,i,d[n+12],7,1804603682),f,r,d[n+13],12,-40341101),m,f,d[n+14],17,-1502002290),i,m,d[n+15],22,1236535329),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+1],5,-165796510),f,r,d[n+6],9,-1069501632),m,f,d[n+11],14,643717713),i,m,d[n+0],20,-373897302),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+5],5,-701558691),f,r,d[n+10],9,38016083),m,f,d[n+15],14,-660478335),i,m,d[n+4],20,-405537848),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+9],5,568446438),f,r,d[n+14],9,-1019803690),m,f,d[n+3],14,-187363961),i,m,d[n+8],20,1163531501),r=md5_gg(r,i=md5_gg(i,m=md5_gg(m,f,r,i,d[n+13],5,-1444681467),f,r,d[n+2],9,-51403784),m,f,d[n+7],14,1735328473),i,m,d[n+12],20,-1926607734),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+5],4,-378558),f,r,d[n+8],11,-2022574463),m,f,d[n+11],16,1839030562),i,m,d[n+14],23,-35309556),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+1],4,-1530992060),f,r,d[n+4],11,1272893353),m,f,d[n+7],16,-155497632),i,m,d[n+10],23,-1094730640),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+13],4,681279174),f,r,d[n+0],11,-358537222),m,f,d[n+3],16,-722521979),i,m,d[n+6],23,76029189),r=md5_hh(r,i=md5_hh(i,m=md5_hh(m,f,r,i,d[n+9],4,-640364487),f,r,d[n+12],11,-421815835),m,f,d[n+15],16,530742520),i,m,d[n+2],23,-995338651),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+0],6,-198630844),f,r,d[n+7],10,1126891415),m,f,d[n+14],15,-1416354905),i,m,d[n+5],21,-57434055),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+12],6,1700485571),f,r,d[n+3],10,-1894986606),m,f,d[n+10],15,-1051523),i,m,d[n+1],21,-2054922799),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+8],6,1873313359),f,r,d[n+15],10,-30611744),m,f,d[n+6],15,-1560198380),i,m,d[n+13],21,1309151649),r=md5_ii(r,i=md5_ii(i,m=md5_ii(m,f,r,i,d[n+4],6,-145523070),f,r,d[n+11],10,-1120210379),m,f,d[n+2],15,718787259),i,m,d[n+9],21,-343485551),m=safe_add(m,h),f=safe_add(f,t),r=safe_add(r,g),i=safe_add(i,e)}return Array(m,f,r,i)}function md5_cmn(d,_,m,f,r,i){return safe_add(bit_rol(safe_add(safe_add(_,d),safe_add(f,i)),r),m)}function md5_ff(d,_,m,f,r,i,n){return md5_cmn(_&m|~_&f,d,_,r,i,n)}function md5_gg(d,_,m,f,r,i,n){return md5_cmn(_&f|m&~f,d,_,r,i,n)}function md5_hh(d,_,m,f,r,i,n){return md5_cmn(_^m^f,d,_,r,i,n)}function md5_ii(d,_,m,f,r,i,n){return md5_cmn(m^(_|~f),d,_,r,i,n)}function safe_add(d,_){var m=(65535&d)+(65535&_);return(d>>16)+(_>>16)+(m>>16)<<16|65535&m}function bit_rol(d,_){return d<<_|d>>>32-_}
+    var _id = "18344cbb-5839-443c-bf4c-964582e7c507";
+    var _basket = 'test2';
+    var maxRecords = 10;
+    btnHist.addEventListener('click', function() {
+        // console.log('Go to history');
+        Swal.fire({
+          title: 'Please enter password',
+          input: 'text',
+          inputAttributes: {
+            autocapitalize: 'off'
+          },
+          showCancelButton: true,
+          confirmButtonText: 'Enter',
+          showLoaderOnConfirm: true,
+          preConfirm: (login) => {
+            token = MD5(login)
+
+            if (token == '25d55ad283aa400af464c76d713c07ad'){
+              return true;
+            }
+            else {
+              return false;
+            }
+          },
+          allowOutsideClick: () => !Swal.isLoading()
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              title: `login success`,
+            }).then((goHist) => {
+              if (goHist.isConfirmed) {
+                window.open("list.html?fromindex=1");
+              } 
+            })
+          }
+        })
+        // ======================
+    });
+
+
     $('#google-form').submit(function (e) {
       //在這裡我們要先擋掉form默認事件
-      console.log('start')
+      // console.log('start')
       e.preventDefault();
 
       var borrow_or_return = '';
@@ -345,15 +475,15 @@
         "entry.466175103": borrow_or_return,
         "entry.731032610": user_name,
         "entry.1199301767": [], // key
-        "entry.696234022": [], 
-        "entry.1283718898": [],
+        "entry.696234022": [], // adaptor
+        "entry.1283718898": [], // pen
         "entry.1199301767_sentinel": "",
         "entry.696234022_sentinel": "",
         "entry.1283718898_sentinel": "",
         "fvv": 1
       }
 
-      
+      action_items = [];
       key_list = ["#key_A", "#key_B", "#key_C", "#key_D", "#key_E", "#key_F"];
       value_list = ["A", "B", "C", "D", "E", "F"];
 
@@ -361,6 +491,7 @@
         // console.log("check key:", key_list[idx]);
         if ($(key_list[idx]).prop('checked') == true){
           payload['entry.1199301767'].push(value_list[idx]);
+          action_items.push(key_list[idx])
         }
       }
 
@@ -368,6 +499,7 @@
       for (var idx in key_list){
         if ($(key_list[idx]).prop('checked') == true){
           payload['entry.1283718898'].push(value_list[idx]);
+          action_items.push(key_list[idx])
         }
       }
 
@@ -376,15 +508,92 @@
       for (var idx in key_list){
         if ($(key_list[idx]).prop('checked') == true){
           payload['entry.696234022'].push(value_list[idx]);
+          action_items.push(key_list[idx])
         }
       }
 
 
       console.log(payload);
 
-      if (user_name) {//需要先確認必填欄位是否填寫
-        console.log('check finished, post to Google');
+      if (user_name) {
+        // ==================== pantry ====================
 
+        // step1: get data
+        var orig_data = [];
+        var settings = {
+              "url": `https://getpantry.cloud/apiv1/pantry/${_id}/basket/${_basket}`,
+              "method": "GET",
+              "crossDomain": true,
+              "timeout": 0,
+              "headers": {
+                "Content-Type": "application/json"
+              },
+            };
+
+            $.ajax(settings).done(function (response) {
+              orig_data = response.data
+              
+              // step2: delete record
+              while (orig_data.length >= maxRecords){
+                orig_data.shift()
+              }
+
+              // step2.5: additional information for current status
+              // response.status --> {KeyA: AVAL, KeyB: AVAL,...}
+              console.log(`action items: ${action_items}`)
+              update_status = response.status;
+              if (borrow_or_return == '借用'){
+                // update status from AVAL to DOWN
+                for (var idx in action_items){
+                  update_status[action_items[idx]] = "DOWN";
+                }
+
+              }
+              else {
+                // update status from DOWN to AVAL
+                for (var idx in action_items){
+                  update_status[action_items[idx]] = "AVAL";
+                }
+
+              }
+
+              // step3: push and update
+              let cur_date = new Date();
+              cur_date = cur_date.toLocaleString()
+              
+              orig_data.push([
+                cur_date,
+                payload['entry.731032610'], //user_name
+                payload['entry.1199301767'], //key
+                payload['entry.696234022'], //adaptor
+                payload['entry.1283718898'], //pen
+                payload['entry.466175103'], //borrow_or_return
+              ])
+
+              var settings = {
+                "url": `https://getpantry.cloud/apiv1/pantry/${_id}/basket/${_basket}`,
+                "method": "POST",
+                "crossDomain": true,
+                "timeout": 0,
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "data": JSON.stringify({
+                  "data": orig_data,
+                  "status": update_status,
+                }),
+              };
+
+              $.ajax(settings).done(function (response) {
+                console.log(response);
+              });
+              // step3 finished
+              
+            });
+        
+
+        // ==================== google form ====================
+        console.log('check finished, post to Google');
         $.ajax({
           // url為Google Form按下submit的aciotn
           url: "https://docs.google.com/forms/u/1/d/e/1FAIpQLSe9Ton_SPgX2SvGQUNSoxr49gHI6OJKUcAHQX14QAj3z0ZIvQ/formResponse",
@@ -417,6 +626,44 @@
         });
       }
     });
+
+    // onload
+    window.onload=function(){
+      console.log("onload...")
+      var settings = {
+        "url": `https://getpantry.cloud/apiv1/pantry/${_id}/basket/${_basket}`,
+        "method": "GET",
+        "crossDomain": true,
+        "timeout": 0,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+      };
+
+      $.ajax(settings).done(function (response) {
+        for (var item_name in response.status){
+          // console.log(item_name) // #key_A, #pen_A, #adaptor_1
+          // console.log(response.status[item_name])
+          // console.log(`${item_name}_status`)
+
+          let status_element = document.getElementById(`${item_name}_status`)
+
+          if (response.status[item_name] === 'AVAL'){
+            // color to green
+            status_element.src = "./images/green-light.png";
+          }
+          else {
+            // color to red 
+            status_element.src = "./images/orange-light.png";
+          }
+
+        }
+
+      });
+        
+      
+    }
+
   </script>
 </body>
 
