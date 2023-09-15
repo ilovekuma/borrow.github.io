@@ -69,6 +69,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="js/main.js"></script>
 <script>
+  
   var _id = "18344cbb-5839-443c-bf4c-964582e7c507";
   var _basket = 'test2';
 
@@ -130,8 +131,13 @@
   // ====== onload ======
   window.onload=function(){
 
-    let table = document.getElementById("histTable");
+    index = window.location.href.search(/fromindex=1/);
+    console.log(`index: ${index}`);
+    if (index < 0){
+      window.location.replace("index.html");
+    }
 
+    let table = document.getElementById("histTable");
     var settings = {
           "url": `https://getpantry.cloud/apiv1/pantry/${_id}/basket/${_basket}`,
           "method": "GET",
@@ -145,7 +151,7 @@
         $.ajax(settings).done(function (response) {
           orig_data = response.data;
           for (rowid in response.data){
-            console.log(response.data[rowid]);
+            // console.log(response.data[rowid]);
 
             let row = table.insertRow(-1); 
 
