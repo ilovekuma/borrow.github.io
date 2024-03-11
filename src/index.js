@@ -13,17 +13,17 @@ import { ScheduleTable, RegistryTable } from './App';
 const menuItems = [
   {
     label: '平板車借用狀態',
-    key: '/tabletCart',
+    key: '/borrow.github.io/tabletCart',
     icon: <CalendarOutlined />,
   },
   {
     label: '借用/歸還登記表',
-    key: '/register',
+    key: '/borrow.github.io/register',
     icon: <HomeOutlined />,
   },
   {
     label: '借用紀錄',
-    key: '/history',
+    key: '/borrow.github.io/history',
     icon: <AppstoreOutlined />,
     disabled: true,
   },
@@ -57,9 +57,9 @@ root.render(
       <RegistryMenu />
 
       <Routes>
-        <Route path='/' element={<RegistryTable />} />
-        <Route path='/register' element={<RegistryTable />} />
-        <Route path='/tabletCart' element={<ScheduleTable />} />
+        <Route path='/borrow.github.io/' element={<RegistryTable />} />
+        <Route path='/borrow.github.io/register' element={<RegistryTable />} />
+        <Route path='/borrow.github.io/tabletCart' element={<ScheduleTable />} />
 
       </Routes>
 
