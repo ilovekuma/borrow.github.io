@@ -266,7 +266,7 @@
             <button type="button" id="btnReg" class="btn btn-outline-secondary " style="width: 100%">  📝預約狀態  </button>
           </span></div>
           <div class="col-sm-6 col-md-4"><span>
-            <button type="submit" class="btn btn-outline-secondary " style="width: 100%">  ✔️ 送出  </button>
+            <button id="submit_btn" type="button" class="btn btn-outline-secondary " style="width: 100%">  ✔️ 送出  </button>
           </span></div>
         </div>
       </div>
@@ -402,11 +402,11 @@
     //     // ======================
     // });
 
+    //============================= Google form 2 =======
 
-    $('#google-form').submit(function (e) {
-      //在這裡我們要先擋掉form默認事件
+    var submit_btn = document.getElementById('submit_btn');
+    submit_btn.addEventListener('click', function() {
       // console.log('start')
-      e.preventDefault();
 
       var borrow_or_return = '';
       jQuery("input[name='inlineRadioOptions']").each(function() {
@@ -422,8 +422,6 @@
       console.log("borrow or return:", borrow_or_return);
       console.log("user name:", user_name);
 
-      
-
       payload = {
         "entry.466175103": borrow_or_return,
         "entry.731032610": user_name,
@@ -433,7 +431,9 @@
         "entry.1199301767_sentinel": "",
         "entry.696234022_sentinel": "",
         "entry.1283718898_sentinel": "",
-        "fvv": 1
+        "fvv": 1,
+        "pageHistory": 0,
+        "dsdoc": true
       }
 
       action_items = [];
@@ -467,95 +467,17 @@
 
 
       console.log(payload);
-
       if (user_name) {
-        // ==================== pantry ====================
-
-        // step1: get data
-        // var orig_data = [];
-        // var settings = {
-        //       "url": `https://getpantry.cloud/apiv1/pantry/${_id}/basket/${_basket}`,
-        //       "method": "GET",
-        //       "crossDomain": true,
-        //       "timeout": 0,
-        //       "headers": {
-        //         "Content-Type": "application/json"
-        //       },
-        //     };
-
-        //     $.ajax(settings).done(function (response) {
-        //       orig_data = response.data
-              
-        //       // step2: delete record
-        //       while (orig_data.length >= maxRecords){
-        //         orig_data.shift()
-        //       }
-
-        //       // step2.5: additional information for current status
-        //       // response.status --> {KeyA: AVAL, KeyB: AVAL,...}
-        //       console.log(`action items: ${action_items}`)
-        //       update_status = response.status;
-        //       if (borrow_or_return == '借用'){
-        //         // update status from AVAL to DOWN
-        //         for (var idx in action_items){
-        //           update_status[action_items[idx]] = "DOWN";
-        //         }
-
-        //       }
-        //       else {
-        //         // update status from DOWN to AVAL
-        //         for (var idx in action_items){
-        //           update_status[action_items[idx]] = "AVAL";
-        //         }
-
-        //       }
-
-        //       // step3: push and update
-        //       let cur_date = new Date();
-        //       cur_date = cur_date.toLocaleString()
-              
-        //       orig_data.push([
-        //         cur_date,
-        //         payload['entry.731032610'], //user_name
-        //         payload['entry.1199301767'], //key
-        //         payload['entry.696234022'], //adaptor
-        //         payload['entry.1283718898'], //pen
-        //         payload['entry.466175103'], //borrow_or_return
-        //       ])
-
-        //       var settings = {
-        //         "url": `https://getpantry.cloud/apiv1/pantry/${_id}/basket/${_basket}`,
-        //         "method": "POST",
-        //         "crossDomain": true,
-        //         "timeout": 0,
-        //         "headers": {
-        //           "Content-Type": "application/json"
-        //         },
-        //         "data": JSON.stringify({
-        //           "data": orig_data,
-        //           "status": update_status,
-        //         }),
-        //       };
-
-        //       $.ajax(settings).done(function (response) {
-        //         console.log(response);
-        //       });
-        //       // step3 finished
-              
-        //     });
-        
-
-        // ==================== google form ====================
+        //
         console.log('check finished, post to Google');
         $.ajax({
           // url為Google Form按下submit的aciotn
-          url: "https://docs.google.com/forms/u/1/d/e/1FAIpQLSe9Ton_SPgX2SvGQUNSoxr49gHI6OJKUcAHQX14QAj3z0ZIvQ/formResponse",
+          url: "https://docs.google.com/forms/u/0/d/e/1FAIpQLSe9Ton_SPgX2SvGQUNSoxr49gHI6OJKUcAHQX14QAj3z0ZIvQ/formResponse",
           crossDomain: true,//解決跨網域CORS的問題
           traditional: true,
           data: payload,
           type: "POST",
           dataType: "JSONP",
-          
           complete: function (resp) {
             console.log('status: ', resp.status);
             Swal.fire({
@@ -577,9 +499,15 @@
             
           }
         });
+
       }
+
+
     });
 
+
+    //============================= Google form 2 =======
+    
     // onload
     window.onload=function(){
       console.log("onload...")
@@ -625,7 +553,7 @@
         let timerInterval;
         Swal.fire({
           title: "Loading...",
-          timer: 5000,
+          timer: 1500,
           timerProgressBar: true,
           didOpen: () => {
             Swal.showLoading();
