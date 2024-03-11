@@ -18,7 +18,7 @@ const menuItems = [
   },
   {
     label: '借用/歸還登記表',
-    key: '/borrow.github.io/register',
+    key: '/borrow.github.io/',
     icon: <HomeOutlined />,
   },
   {
@@ -58,7 +58,7 @@ root.render(
 
       <Routes>
         <Route path='/borrow.github.io/' element={<RegistryTable />} />
-        <Route path='/borrow.github.io/register' element={<RegistryTable />} />
+        <Route path='/borrow.github.io/' element={<RegistryTable />} />
         <Route path='/borrow.github.io/tabletCart' element={<ScheduleTable />} />
 
       </Routes>
