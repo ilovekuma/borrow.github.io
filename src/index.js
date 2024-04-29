@@ -5,10 +5,9 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { Menu } from 'antd';
 import { useState, useEffect } from 'react';
-import { HomeOutlined, AppstoreOutlined, CalendarOutlined } from '@ant-design/icons';
+import { HomeOutlined, AppstoreOutlined, CalendarOutlined, SnippetsOutlined } from '@ant-design/icons';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom'
 import { ScheduleTable, RegistryTable } from './App';
-
 
 const menuItems = [
   {
@@ -20,6 +19,16 @@ const menuItems = [
     label: '借用/歸還登記表',
     key: '/register',
     icon: <HomeOutlined />,
+  },
+  {
+    label: (
+      <a href="https://hackmd.io/@JFWunqRATwa-izvCXieyhA/HyQZSXGgC">
+      數位學習資源
+      </a>
+    ),
+    key: '/learningResource',
+    icon: <SnippetsOutlined />,
+    disabled: false,
   },
   {
     label: '借用紀錄',
