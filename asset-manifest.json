@@ -1,21 +1,15 @@
 {
   "files": {
     "main.css": "/borrow.github.io/static/css/main.e6c13ad2.css",
-    "main.js": "/borrow.github.io/static/js/main.96ef20e9.js",
+    "main.js": "/borrow.github.io/static/js/main.4bb59997.js",
     "static/js/453.05b0fbe0.chunk.js": "/borrow.github.io/static/js/453.05b0fbe0.chunk.js",
-    "static/media/confetti.png": "/borrow.github.io/static/media/confetti.373afbd0f54de439ff2c.png",
-    "static/media/hearts.png": "/borrow.github.io/static/media/hearts.1a6335a28ab9f5fd771d.png",
-    "static/media/cat.png": "/borrow.github.io/static/media/cat.629fa3be2e526be19a47.png",
-    "static/media/star.png": "/borrow.github.io/static/media/star.a9d9433e5774e9fca33a.png",
-    "static/media/trippen.png": "/borrow.github.io/static/media/trippen.5697c7064941b779bcc8.png",
-    "static/media/announce.png": "/borrow.github.io/static/media/announce.a19cd1e845f666b85109.png",
     "index.html": "/borrow.github.io/index.html",
     "main.e6c13ad2.css.map": "/borrow.github.io/static/css/main.e6c13ad2.css.map",
-    "main.96ef20e9.js.map": "/borrow.github.io/static/js/main.96ef20e9.js.map",
+    "main.4bb59997.js.map": "/borrow.github.io/static/js/main.4bb59997.js.map",
     "453.05b0fbe0.chunk.js.map": "/borrow.github.io/static/js/453.05b0fbe0.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e6c13ad2.css",
-    "static/js/main.96ef20e9.js"
+    "static/js/main.4bb59997.js"
   ]
 }
