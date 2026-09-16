@@ -5,7 +5,7 @@ import axios from "axios";
 import { Routes, Route, Link } from 'react-router-dom'
 
 const submitURL = "https://25eadr7ui5.execute-api.ap-southeast-2.amazonaws.com/STG/register_item";
-const tableURL = "https://25eadr7ui5.execute-api.ap-southeast-2.amazonaws.com/STG/getRegister";
+const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxFumAmWOveCjCtiaD96dDBo5gJe7jwHU3LuMcUy7GvmNi9_9j1vZW9DLVoYI6eYlR-tQ/exec";
 
 const item_list = [
   'tablet1','tablet2','tablet3','tablet4','tablet5','tablet6',
@@ -47,18 +47,13 @@ export const ScheduleTable = () => {
   const [carRegData, setCarRegData] = useState(
     ['1', '2', '3', '4', '午', '6', '7', '8'].map((lesson) => ({
       lesson,
-      day_prev: [],
-      day_curr: [],
-      day_next: [],
+      days: [[], [], []],
     }))
   );
 
   useEffect(() => {
     setLoading(true);
-    axios.post(tableURL, {
-      notHtml: true,
-      dayOffset,
-    })
+    axios.get(GAS_WEB_APP_URL, { params: { dayOffset } })
     .then(function (response) {
       // console.log(response);
       setLoading(false);
@@ -103,7 +98,7 @@ export const ScheduleTable = () => {
     );
   }
 
-  const dayColumn = (dataKey, idx) => {
+  const dayColumn = (idx) => {
     const info = dateInfo[idx];
     return {
       title: info ? (
@@ -112,8 +107,8 @@ export const ScheduleTable = () => {
           <span style={{ fontWeight: 400, fontSize: '0.8em' }}>{info.date}</span>
         </span>
       ) : '',
-      dataIndex: dataKey,
-      key: dataKey,
+      dataIndex: ['days', idx],
+      key: `day-${idx}`,
       render: (list) => (
         <>
           {(list || []).map((name, index) => <div key={index}>{colorMap(name, index)}</div>)}
@@ -128,9 +123,9 @@ export const ScheduleTable = () => {
       dataIndex: 'lesson',
       key: 'lesson',
     },
-    dayColumn('day_prev', 0),
-    dayColumn('day_curr', 1),
-    dayColumn('day_next', 2),
+    dayColumn(0),
+    dayColumn(1),
+    dayColumn(2),
   ];
 
   return (
