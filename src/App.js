@@ -41,96 +41,36 @@ function refreshPage() {
 export const ScheduleTable = () => {
 
   const [loading, setLoading] = React.useState(true);
+  const [dayOffset, setDayOffset] = useState(0);
+  const [dateInfo, setDateInfo] = useState([]);
 
   const [carRegData, setCarRegData] = useState(
-    [
-      {
-        lesson: '1',
-        sunday_list: [],
-        monday_list: [],
-        tuesday_list: [],
-        thursday_list: [],
-        friday_list: []
-      },
-      {
-        lesson: '2',
-        sunday_list: [],
-        monday_list: [],
-        tuesday_list: [],
-        thursday_list: [],
-        friday_list: []
-      },
-      {
-        lesson: '3',
-        sunday_list: [],
-        monday_list: [],
-        tuesday_list: [],
-        thursday_list: [],
-        friday_list: []
-  
-      },
-      {
-        lesson: '4',
-        sunday_list: [],
-        monday_list: [],
-        tuesday_list: [],
-        thursday_list: [],
-        friday_list: []
-  
-      },
-      {
-        lesson: '午',
-        sunday_list: [],
-        monday_list: [],
-        tuesday_list: [],
-        thursday_list: [],
-        friday_list: []
-  
-      },
-      {
-        lesson: '6',
-        sunday_list: [],
-        monday_list: [],
-        tuesday_list: [],
-        thursday_list: [],
-        friday_list: []
-  
-      },
-      {
-        lesson: '7',
-        sunday_list: [],
-        monday_list: [],
-        tuesday_list: [],
-        thursday_list: [],
-        friday_list: []
-  
-      },
-      {
-        lesson: '8',
-        sunday_list: [],
-        monday_list: [],
-        tuesday_list: [],
-        thursday_list: [],
-        friday_list: []
-  
-      },
-    ]
+    ['1', '2', '3', '4', '午', '6', '7', '8'].map((lesson) => ({
+      lesson,
+      day_prev: [],
+      day_curr: [],
+      day_next: [],
+    }))
   );
 
   useEffect(() => {
+    setLoading(true);
     axios.post(tableURL, {
       notHtml: true,
+      dayOffset,
     })
     .then(function (response) {
       // console.log(response);
       setLoading(false);
       setCarRegData(response.data.body);
+      setDateInfo(response.data.date || []);
 
     })
     .catch(function (error) {
       console.log(error);
+      setLoading(false);
     });
-  }, []);
+  }, [dayOffset]);
 
 
   const colorMap = (name, idx) => {
@@ -153,6 +93,9 @@ export const ScheduleTable = () => {
     if (name.includes("F車")){
       color = 'green';
     }
+    if (name.includes("H車")){
+      color = 'magenta';
+    }
     return (
       <Tag color={color} key={idx}>
         {name.toUpperCase()}
@@ -160,69 +103,45 @@ export const ScheduleTable = () => {
     );
   }
 
+  const dayColumn = (dataKey, idx) => {
+    const info = dateInfo[idx];
+    return {
+      title: info ? (
+        <span style={info.isToday ? { color: '#1677ff', fontWeight: 700 } : undefined}>
+          {info.weekday}<br />
+          <span style={{ fontWeight: 400, fontSize: '0.8em' }}>{info.date}</span>
+        </span>
+      ) : '',
+      dataIndex: dataKey,
+      key: dataKey,
+      render: (list) => (
+        <>
+          {(list || []).map((name, index) => <div key={index}>{colorMap(name, index)}</div>)}
+        </>
+      ),
+    };
+  };
+
   const columns = [
     {
       title: '#',
       dataIndex: 'lesson',
       key: 'lesson',
     },
-    {
-      title: '一',
-      dataIndex: 'sunday',
-      key: 'sunday',
-      render: (_, { sunday_list }) => (
-        <>
-          {sunday_list.map((name, index) => <div key={index}>{colorMap(name, index)}</div>)}
-        </>
-      ),
-    },
-    {
-      title: '二',
-      dataIndex: 'monday',
-      key: 'monday',
-      render: (_, { monday_list }) => (
-        <>
-          {monday_list.map((name, index) => <div key={index}>{colorMap(name, index)}</div>)}
-        </>
-      ),
-    },
-    {
-      title: '三',
-      dataIndex: 'tuesday',
-      key: 'tuesday',
-      render: (_, { tuesday_list }) => (
-        <>
-          {tuesday_list.map((name, index) => <div key={index}>{colorMap(name, index)}</div>)}
-        </>
-      ),
-    },
-    {
-      title: '四',
-      key: 'thursday',
-      dataIndex: 'thursday',
-      render: (_, { thursday_list }) => (
-        <>
-          {thursday_list.map((name, index) => <div key={index}>{colorMap(name, index)}</div>)}
-        </>
-      ),
-    },
-    {
-      title: '五',
-      key: 'friday',
-      dataIndex: 'friday',
-      render: (_, { friday_list }) => (
-        <>
-          {friday_list.map((name, index) => <div key={index}>{colorMap(name, index)}</div>)}
-        </>
-      ),
-    },
+    dayColumn('day_prev', 0),
+    dayColumn('day_curr', 1),
+    dayColumn('day_next', 2),
   ];
-  
+
   return (
     <>
-    <Spin spinning={loading} delay={200} size="large">
-      <Table columns={columns} dataSource={carRegData} /> 
-    </Spin>
+      <Flex justify="center" align="center" gap="middle" style={{ margin: '12px 0' }}>
+        <Button onClick={() => setDayOffset(dayOffset - 1)}>← 前一天</Button>
+        <Button onClick={() => setDayOffset(dayOffset + 1)}>後一天 →</Button>
+      </Flex>
+      <Spin spinning={loading} delay={200} size="large">
+        <Table columns={columns} dataSource={carRegData} rowKey="lesson" pagination={false} />
+      </Spin>
     </>
   );
 };
