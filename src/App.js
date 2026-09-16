@@ -142,6 +142,16 @@ export const ScheduleTable = () => {
 };
 
 
+// 平板周邊借還系統 — 後端在 Apps Script，前端沿用原本的 Vue 介面，
+// 以整頁 iframe 嵌入本站（原始檔在 public/tablet-borrow.html）。
+export const TabletBorrowApp = () => (
+  <iframe
+    title="平板周邊借還系統"
+    src={`${process.env.PUBLIC_URL}/tablet-borrow.html`}
+    style={{ width: '100%', height: '100vh', border: 'none', display: 'block' }}
+  />
+);
+
 export const RegistryTable = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [returnItem, setReturnItem] = useState("");
