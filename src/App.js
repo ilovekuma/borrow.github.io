@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { EditOutlined, AppstoreOutlined, HomeOutlined, InfoCircleOutlined, UserOutlined, ApiOutlined } from '@ant-design/icons';
 import { Tag, Spin, Table, Tooltip, Button, Drawer, Layout, Flex, Card, Col, Input, Row, Steps, Switch, message, Modal } from 'antd';
 import axios from "axios";
@@ -144,13 +144,17 @@ export const ScheduleTable = () => {
 
 // 平板周邊借還系統 — 後端在 Apps Script，前端沿用原本的 Vue 介面，
 // 以整頁 iframe 嵌入本站（原始檔在 public/tablet-borrow.html）。
-export const TabletBorrowApp = () => (
-  <iframe
-    title="平板周邊借還系統"
-    src={`${process.env.PUBLIC_URL}/tablet-borrow.html`}
-    style={{ width: '100%', height: '100vh', border: 'none', display: 'block' }}
-  />
-);
+// URL 加上每次載入才產生的版本參數，避免瀏覽器/CDN 快取到舊版 tablet-borrow.html。
+export const TabletBorrowApp = () => {
+  const v = useMemo(() => Date.now(), []);
+  return (
+    <iframe
+      title="平板周邊借還系統"
+      src={`${process.env.PUBLIC_URL}/tablet-borrow.html?v=${v}`}
+      style={{ width: '100%', height: '100vh', border: 'none', display: 'block' }}
+    />
+  );
+};
 
 export const RegistryTable = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
