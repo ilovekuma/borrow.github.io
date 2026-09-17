@@ -13,25 +13,31 @@
       margin: 0;
     }
 
+    /* ── App shell: sidebar / main / cart in one non-overlapping row ── */
+    #app-shell {
+      display: flex;
+      align-items: stretch;
+      min-height: 100vh;
+    }
+
     /* ── Sidebar ── */
     #sidebar {
-      position: fixed;
-      left: 0;
-      top: 0;
-      height: 100vh;
+      flex-shrink: 0;
       display: flex;
       flex-direction: column;
       gap: 6px;
       padding: 16px 0;
+      position: sticky;
+      top: 0;
+      max-height: 100vh;
+      overflow-y: auto;
       z-index: 50;
-      pointer-events: none;
     }
 
     .cat-row {
       position: relative;
       display: flex;
       align-items: stretch;
-      pointer-events: all;
     }
 
     .cat-trigger {
@@ -66,7 +72,7 @@
       background: rgba(255,255,255,0.97);
       border-radius: 0 12px 12px 0;
       box-shadow: 4px 4px 16px rgba(0,0,0,0.12);
-      max-width: 260px;
+      width: 230px;
       align-content: flex-start;
     }
 
@@ -191,16 +197,24 @@
 
     /* ── Right cart panel ── */
     #cart-panel {
-      position: fixed;
-      right: 0;
+      flex-shrink: 0;
+      position: sticky;
       top: 0;
       height: 100vh;
-      width: 230px;
+      width: 210px;
       background: #fffef2;
       display: flex;
       flex-direction: column;
       z-index: 40;
       box-shadow: -6px 0 24px rgba(0,0,0,0.06);
+    }
+
+    /* ── Narrower iPad widths (e.g. portrait) ── */
+    @media (max-width: 1000px) {
+      .cat-items { width: 190px; }
+      #cart-panel { width: 175px; }
+      .cart-slot .slot-user { font-size: 0.52rem; }
+      .cart-slot .slot-car { font-size: 0.46rem; }
     }
 
     .cart-header {
@@ -278,6 +292,7 @@
 </head>
 <body>
 <div id="app">
+<div id="app-shell">
 
   <!-- ══ Sidebar ══ -->
   <div id="sidebar">
@@ -305,7 +320,8 @@
   </div>
 
   <!-- ══ Main ══ -->
-  <div class="ml-24 p-6 min-h-screen flex flex-col" style="max-width:900px; margin-left:auto; margin-right:auto; padding-left: 6rem;">
+  <div class="flex-1 flex flex-col" style="min-width:0; min-height:0;">
+  <div class="p-6 flex-1 flex flex-col" style="max-width:900px; width:100%; margin-left:auto; margin-right:auto; min-height:0;">
 
     <!-- Title -->
     <div class="flex items-center justify-center gap-3 mb-3">
@@ -407,7 +423,7 @@
         <div v-if="activeCards.length === 0" class="flex items-center justify-center h-40 text-gray-400">
           目前無借用紀錄
         </div>
-        <transition-group name="card" tag="div" class="grid gap-4" style="grid-template-columns: repeat(3, minmax(0,1fr)); position:relative;">
+        <transition-group name="card" tag="div" class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); position:relative;">
           <div
             v-for="card in activeCards"
             :key="card.id"
@@ -463,6 +479,45 @@
     </button>
 
   </div>
+  </div>
+
+  <!-- ══ Right Panel: Today's Cart ══ -->
+  <div id="cart-panel">
+    <div class="cart-header">
+      今日平板車借用
+      <div style="font-size:11px; font-weight:400; margin-top:2px;">{{ todayCartDate || '--' }}</div>
+    </div>
+    <div class="cart-body" ref="cartBody">
+      <div v-if="cartLoading" style="text-align:center; padding:20px; color:#a08060; font-size:12px;">
+        <span style="display:inline-block; width:12px; height:12px; border:2px solid #d4b896; border-top-color:#7c5c38; border-radius:50%; animation:spin 0.7s linear infinite; vertical-align:middle; margin-right:4px;"></span>
+        載入中…
+      </div>
+      <div v-else-if="todayCartIsWeekend" style="text-align:center; padding:20px; color:#aaa; font-size:12px;">今日為假日</div>
+      <div v-else-if="todayCartSessions.length === 0" style="text-align:center; padding:20px; color:#aaa; font-size:12px;">無資料</div>
+      <div v-else>
+        <div v-for="sess in todayCartSessions" :key="sess.session" class="cart-sess" :data-session="sess.session">
+          <div class="cart-sess-label">{{ sess.session === '午' ? '中午' : '第 ' + sess.session + ' 節' }}</div>
+          <div class="cart-grid-3x3">
+            <div
+              v-for="car in CARS"
+              :key="car.key"
+              class="cart-slot"
+              :class="{ booked: getBookedUser(sess.bookings, car.key) }"
+              :style="{ background: car.color }"
+              :title="getBookedUser(sess.bookings, car.key) ? getBookedUser(sess.bookings, car.key) + ' ' + car.label : car.label"
+            >
+              <template v-if="getBookedUser(sess.bookings, car.key)">
+                <span class="slot-user">{{ getBookedUser(sess.bookings, car.key) }}</span>
+                <span class="slot-car">{{ car.label }}</span>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
 
   <!-- ══ Clear History Modal ══ -->
   <div v-if="showClearHistoryModal" class="modal-overlay" @click.self="showClearHistoryModal = false">
@@ -507,42 +562,6 @@
         >
           確認歸還
         </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ Right Panel: Today's Cart ══ -->
-  <div id="cart-panel">
-    <div class="cart-header">
-      今日平板車借用
-      <div style="font-size:11px; font-weight:400; margin-top:2px;">{{ todayCartDate || '--' }}</div>
-    </div>
-    <div class="cart-body">
-      <div v-if="cartLoading" style="text-align:center; padding:20px; color:#a08060; font-size:12px;">
-        <span style="display:inline-block; width:12px; height:12px; border:2px solid #d4b896; border-top-color:#7c5c38; border-radius:50%; animation:spin 0.7s linear infinite; vertical-align:middle; margin-right:4px;"></span>
-        載入中…
-      </div>
-      <div v-else-if="todayCartIsWeekend" style="text-align:center; padding:20px; color:#aaa; font-size:12px;">今日為假日</div>
-      <div v-else-if="todayCartSessions.length === 0" style="text-align:center; padding:20px; color:#aaa; font-size:12px;">無資料</div>
-      <div v-else>
-        <div v-for="sess in todayCartSessions" :key="sess.session" class="cart-sess">
-          <div class="cart-sess-label">{{ sess.session === '午' ? '中午' : '第 ' + sess.session + ' 節' }}</div>
-          <div class="cart-grid-3x3">
-            <div
-              v-for="car in CARS"
-              :key="car.key"
-              class="cart-slot"
-              :class="{ booked: getBookedUser(sess.bookings, car.key) }"
-              :style="{ background: car.color }"
-              :title="getBookedUser(sess.bookings, car.key) ? getBookedUser(sess.bookings, car.key) + ' ' + car.label : car.label"
-            >
-              <template v-if="getBookedUser(sess.bookings, car.key)">
-                <span class="slot-user">{{ getBookedUser(sess.bookings, car.key) }}</span>
-                <span class="slot-car">{{ car.label }}</span>
-              </template>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -776,6 +795,33 @@ createApp({
       } finally {
         this.cartLoading = false;
       }
+      await this.$nextTick();
+      this.scrollCartToNoonIfAfternoon();
+    },
+
+    // 過中午後，今日平板車借用欄位預設捲動到下半部（中午之後的節次），
+    // 但只是設定初始捲動位置，使用者仍可自行往上滑回去
+    scrollCartToNoonIfAfternoon() {
+      if (new Date().getHours() < 12) return;
+      const body = this.$refs.cartBody;
+      if (!body) return;
+      const noonEl = body.querySelector('[data-session="午"]');
+      if (noonEl) {
+        const bodyRect = body.getBoundingClientRect();
+        const noonRect = noonEl.getBoundingClientRect();
+        body.scrollTop += noonRect.top - bodyRect.top;
+      } else {
+        body.scrollTop = body.scrollHeight / 2;
+      }
+    },
+
+    // 排定在當天中午 12:01 自動重新整理一次頁面
+    // （頁面重載後 mounted 會再次呼叫本方法，自動排下一天的 12:01，不需手動維護）
+    scheduleNoonRefresh() {
+      const now = new Date();
+      const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 1, 0, 0);
+      if (target <= now) target.setDate(target.getDate() + 1);
+      setTimeout(() => location.reload(), target - now);
     }
   },
 
@@ -784,7 +830,7 @@ createApp({
     if (n) try { this.nameHistory = JSON.parse(n); } catch(e) {}
     this.loadFromApi();
     this.loadTodayCart();
-    setInterval(() => this.loadTodayCart(), 3 * 60 * 1000);
+    this.scheduleNoonRefresh();
   }
 }).mount('#app');
 </script>
