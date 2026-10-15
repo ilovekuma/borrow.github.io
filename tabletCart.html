@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>平板車借用總覽</title>
+<style>
+  /* ========== Design Tokens ========== */
+  :root {
+    --primary-50:  #eef2ff;
+    --primary-100: #e0e7ff;
+    --primary-600: #4f46e5;
+    --primary-700: #4338ca;
+    --primary-800: #3730a3;
+
+    --bg:          #f8fafc;
+    --surface:     #ffffff;
+    --border:      #e2e8f0;
+    --border-strong:#cbd5e1;
+
+    --text:        #0f172a;
+    --text-muted:  #64748b;
+    --text-faint:  #94a3b8;
+
+    --danger-bg:   #fef2f2;
+    --danger-border:#fecaca;
+    --danger-text: #b91c1c;
+
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+
+    --shadow-sm: 0 1px 2px rgb(15 23 42 / .06);
+    --shadow-md: 0 4px 12px rgb(15 23 42 / .08);
+
+    --font: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei",
+            "Noto Sans TC", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--primary-600);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+
+  /* ========== Header ========== */
+  .site-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px 12px;
+  }
+  .header-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .brand h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: .02em;
+  }
+  .week-range {
+    margin: 2px 0 0;
+    font-size: 14px;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .week-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .btn {
+    appearance: none;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background-color .15s ease-out, border-color .15s ease-out,
+                color .15s ease-out, transform .15s ease-out, box-shadow .15s ease-out;
+  }
+  .btn:hover { background: var(--primary-50); border-color: var(--primary-100); }
+  .btn:active { transform: scale(.98); }
+  .btn:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn--icon { padding: 0; width: 40px; }
+  .btn--primary {
+    background: var(--primary-600);
+    border-color: var(--primary-600);
+    color: #fff;
+  }
+  .btn--primary:hover { background: var(--primary-700); border-color: var(--primary-700); }
+  .btn[hidden] { display: none; }
+
+  .updated-at {
+    max-width: 1120px;
+    margin: 8px auto 0;
+    font-size: 12px;
+    color: var(--text-faint);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* spinner */
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* error banner */
+  .error-banner {
+    max-width: 1120px;
+    margin: 8px auto 0;
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-border);
+    color: var(--danger-text);
+    border-radius: var(--radius-md);
+    padding: 8px 12px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .error-banner[hidden] { display: none; }
+  .error-banner button {
+    appearance: none;
+    border: none;
+    background: none;
+    color: inherit;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 6px;
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: var(--radius-sm);
+  }
+  .error-banner button:hover { background: rgb(0 0 0 / .06); }
+
+  /* ========== Legend ========== */
+  .legend {
+    max-width: 1120px;
+    margin: 16px auto 0;
+    padding: 0 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .legend-title { font-weight: 600; color: var(--text); margin-right: 2px; }
+
+  /* cart badge / chip shared */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .badge .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    flex: none;
+  }
+
+  /* ========== Main ========== */
+  main {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 16px 20px 48px;
+  }
+
+  .empty-state {
+    background: var(--surface);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-lg);
+    padding: 40px 16px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 15px;
+    margin-bottom: 16px;
+  }
+  .empty-state[hidden] { display: none; }
+
+  /* ===== Desktop grid (≥768px) ===== */
+  .grid {
+    display: grid;
+    grid-template-columns: 72px repeat(5, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .grid-head {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 6px 4px 8px;
+  }
+  .grid-head .date { display: block; font-size: 12px; font-weight: 400; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+  .grid-head.today { color: var(--primary-700); }
+  .grid-head.today .date { color: var(--primary-600); font-weight: 600; }
+  .grid-corner { }
+
+  .period-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    min-height: 68px;
+  }
+  .period-label.is-lunch {
+    background: var(--primary-50);
+    border-color: var(--primary-100);
+    color: var(--primary-800);
+  }
+
+  .cell {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    min-height: 68px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: border-color .15s ease-out, box-shadow .15s ease-out;
+  }
+  .cell:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+  .cell.today-col { background: #fdfdff; }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 4px 9px;
+    border-radius: var(--radius-sm);
+    border: 1px solid;
+    line-height: 1.35;
+    animation: chip-in .2s ease-out;
+  }
+  .chip .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex: none;
+  }
+  @keyframes chip-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* ===== Mobile view (<768px) ===== */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 4px;
+    margin-bottom: 12px;
+  }
+  .tab {
+    appearance: none;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    flex: 1;
+    min-height: 44px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    position: relative;
+    transition: background-color .15s ease-out, color .15s ease-out;
+  }
+  .tab .tab-date { display: block; font-size: 11px; font-weight: 400; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+  .tab:hover { background: var(--primary-50); }
+  .tab[aria-selected="true"] {
+    background: var(--primary-600);
+    color: #fff;
+  }
+  .tab[aria-selected="true"] .tab-date { color: rgb(255 255 255 / .75); }
+  .tab.is-today .tab-date::after {
+    content: "";
+    display: inline-block;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--primary-600);
+    margin-left: 3px;
+    vertical-align: 2px;
+  }
+  .tab[aria-selected="true"].is-today .tab-date::after { background: #fff; }
+
+  .cards {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: 2px 14px;
+    animation: chip-in .2s ease-out;
+  }
+  .cards > .skeleton-block + .skeleton-block { margin-top: 8px; }
+  .plist { display: flex; flex-direction: column; }
+  .prow {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .prow:last-child { border-bottom: none; }
+  .prow-label {
+    flex: none;
+    width: 68px;
+    padding-top: 1px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .prow-label.is-lunch { color: var(--primary-700); }
+  .prow-items { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0; }
+  .borrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .borrow-name { font-size: 15px; font-weight: 600; color: var(--text); }
+  .prow-empty { color: var(--text-faint); font-size: 14px; }
+
+  /* ===== Skeleton ===== */
+  .skeleton-block {
+    background: linear-gradient(90deg, #eef1f6 25%, #f7f9fc 37%, #eef1f6 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.2s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+  }
+  @keyframes shimmer {
+    from { background-position: 100% 0; }
+    to   { background-position: 0 0; }
+  }
+
+  /* ===== Responsive visibility ===== */
+  #desktopView { display: block; }
+  #mobileView  { display: none; }
+  @media (max-width: 767px) {
+    #desktopView { display: none; }
+    #mobileView  { display: block; }
+    .site-header { padding: 14px 16px 10px; }
+    main { padding: 12px 16px 40px; }
+    .legend { padding: 0 16px; }
+    .header-inner { align-items: flex-start; }
+    .header-actions { width: 100%; justify-content: space-between; }
+    .updated-at { text-align: left; padding: 0 16px; }
+    .error-banner { margin-left: 16px; margin-right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand">
+      <h1>平板車借用總覽</h1>
+      <p class="week-range" id="weekRange">&nbsp;</p>
+    </div>
+    <div class="header-actions">
+      <div class="week-nav">
+        <button class="btn btn--icon" id="prevWeekBtn" aria-label="上一週">◀</button>
+        <button class="btn" id="thisWeekBtn" hidden>回本週</button>
+        <button class="btn btn--icon" id="nextWeekBtn" aria-label="下一週">▶</button>
+      </div>
+      <button class="btn btn--primary" id="refreshBtn">
+        <span id="refreshIcon" aria-hidden="true">⟳</span>
+        <span id="refreshLabel">更新</span>
+      </button>
+    </div>
+  </div>
+  <p class="updated-at" id="updatedAt"></p>
+  <div class="error-banner" id="errorBanner" role="alert" hidden>
+    <span id="errorText">更新失敗，請檢查網路後再試。</span>
+    <button id="errorCloseBtn" aria-label="關閉錯誤提示">✕</button>
+  </div>
+</header>
+
+<div class="legend" id="legend" aria-label="平板車顏色圖例"></div>
+
+<main>
+  <div class="empty-state" id="emptyState" hidden>本週沒有借用紀錄 🎉</div>
+
+  <!-- 桌面版：節次 × 日期 網格 -->
+  <section id="desktopView" aria-label="本週借用表格">
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <!-- 手機版：週一～週五分頁 + 卡片清單 -->
+  <section id="mobileView" aria-label="本週借用列表">
+    <div class="tabs" id="tabs" role="tablist" aria-label="選擇日期"></div>
+    <div class="cards" id="cards"></div>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ========== 設定 ========== */
+  var SHEET_ID = "109YMzNRgbJkgnNmBnwb7dQ3fVTzvIco4zXPYpQDXO8k";
+  var SHEET_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID +
+                  "/gviz/tq?tqx=out:json&t="; // 加時間戳避免快取
+
+  // 一天 9 節：午休排在第四節與第五節之間
+  var PERIODS = [
+    { label: "第一節" }, { label: "第二節" }, { label: "第三節" }, { label: "第四節" },
+    { label: "午休" },
+    { label: "第五節" }, { label: "第六節" }, { label: "第七節" }, { label: "第八節" }
+  ];
+  var WEEKDAYS = ["週一", "週二", "週三", "週四", "週五"];
+
+  // 車號配色：同一色系、不同色相，柔和底＋深字確保對比
+  var CART_ORDER = ["A車", "B車", "C車", "D車", "E車", "F車", "G車", "H車", "熊熊車", "兔兔車"];
+
+  var COLUMNS = { name: 0, date: 1, slots: 2, cart: 3 };
+
+  /* ========== 狀態 ========== */
+  var state = {
+    records: [],          // 去重後的借用紀錄 { name, dateKey, date, periodIdx, cart }
+    weekStart: null,      // 目前顯示的週一
+    selectedDay: 0,       // 手機版選中的日 (0=週一)
+    todayKey: "",
+    loading: false,
+    loaded: false,
+    updatedAt: null
+  };
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ========== 日期工具 ========== */
+  function toKey(d) {
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return d.getFullYear() + "-" + m + "-" + day;
+  }
+  function mondayOf(d) {
+    var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    var dow = x.getDay(); // 0=Sun
+    var diff = dow === 0 ? -6 : 1 - dow;
+    x.setDate(x.getDate() + diff);
+    return x;
+  }
+  function addDays(d, n) {
+    var x = new Date(d);
+    x.setDate(x.getDate() + n);
+    return x;
+  }
+  function isSameWeek(a, b) { return toKey(mondayOf(a)) === toKey(mondayOf(b)); }
+  function shortMD(d) { return (d.getMonth() + 1) + "/" + d.getDate(); }
+
+  /* ========== 資料解析 ========== */
+  function parseDateCell(raw) {
+    if (raw == null) return null;
+    var s = String(raw).trim();
+    var m = s.match(/^(\d{4})\D?(\d{2})\D?(\d{2})$/); // 20261015 / 2026/10/15 / 2026-10-15
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+    var d = new Date(s);
+    return isNaN(d) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  // 回傳 1～8（第一節=1），找不到回 -1
+  function normDigit(ch) {
+    var full = "１２３４５６７８";
+    var half = "12345678";
+    var cn = "一二三四五六七八";
+    var i;
+    i = full.indexOf(ch); if (i >= 0) return i + 1;
+    i = half.indexOf(ch); if (i >= 0) return i + 1;
+    i = cn.indexOf(ch);  if (i >= 0) return i + 1;
+    return -1;
+  }
+
+  // 解析「預定時段」：支援「第三節, 第五節」「午休」等寫法
+  function parseSlots(raw) {
+    if (raw == null) return [];
+    var parts = String(raw).split(/[,，、;；\n]/);
+    var idxs = {};
+    parts.forEach(function (p) {
+      p = p.trim();
+      if (!p) return;
+      if (p.indexOf("午休") >= 0) { idxs[4] = true; return; } // 午休固定在第 5 列
+      var m = p.match(/([0-9１-８一二三四五六七八])\s*[節节课課]?/);
+      if (m) {
+        var n = normDigit(m[1]);
+        // 一～四節→0～3；午休固定 4；五～八節→5～8（午休佔一列故順移）
+        if (n >= 1 && n <= 8) idxs[n <= 4 ? n - 1 : n] = true;
+      }
+    });
+    return Object.keys(idxs).map(Number).sort(function (a, b) { return a - b; });
+  }
+
+  function cellVal(row, i) {
+    var c = row.c && row.c[i];
+    if (!c) return "";
+    return c.v != null ? c.v : "";
+  }
+
+  function parseRows(rows) {
+    var seen = {};
+    var out = [];
+    rows.forEach(function (row) {
+      var name = String(cellVal(row, COLUMNS.name)).trim();
+      var cart = String(cellVal(row, COLUMNS.cart)).trim() || "未指定";
+      var date = parseDateCell(cellVal(row, COLUMNS.date));
+      if (!name || !date) return;
+      var dow = date.getDay();
+      if (dow === 0 || dow === 6) return; // 只顯示週一～週五
+      var dateKey = toKey(date);
+      parseSlots(cellVal(row, COLUMNS.slots)).forEach(function (idx) {
+        var key = name + "|" + dateKey + "|" + idx + "|" + cart;
+        if (seen[key]) return; // 去重
+        seen[key] = true;
+        out.push({ name: name, cart: cart, date: date, dateKey: dateKey, periodIdx: idx });
+      });
+    });
+    out.sort(function (a, b) {
+      return a.date - b.date || a.periodIdx - b.periodIdx || a.cart.localeCompare(b.cart, "zh-Hant");
+    });
+    return out;
+  }
+
+  /* ========== 顏色 ========== */
+  function cartHue(cart) {
+    var i = CART_ORDER.indexOf(cart);
+    return i >= 0 ? (210 + i * 36) % 360 : null;
+  }
+  function cartBadgeStyle(cart) {
+    var h = cartHue(cart);
+    if (h === null) {
+      return "background:#f1f5f9;border-color:#cbd5e1;color:#475569";
+    }
+    return "background:hsl(" + h + " 72% 94%);border-color:hsl(" + h + " 58% 72%);color:hsl(" + h + " 55% 28%)";
+  }
+  function cartDotStyle(cart) {
+    var h = cartHue(cart);
+    return h === null ? "background:#64748b" : "background:hsl(" + h + " 60% 50%)";
+  }
+  function cartChipStyle(cart) {
+    var h = cartHue(cart);
+    if (h === null) {
+      return "background:#f8fafc;border-color:#cbd5e1;color:#334155";
+    }
+    return "background:hsl(" + h + " 72% 95%);border-color:hsl(" + h + " 55% 78%);color:hsl(" + h + " 50% 26%)";
+  }
+
+  /* ========== 取得資料 ==========
+     用 <script> 標籤注入 gviz，繞過 CORS：
+     - file:// 直接開啟時 Origin 為 null，Google 不回 ACAO 標頭，fetch 會被擋
+     - gviz 回傳的 google.visualization.Query.setResponse(...) 本身就是可執行 JS，
+       script 標籤不受 CORS 限制，file:// 與線上部署都能用                          */
+  function loadViaScript() {
+    return new Promise(function (resolve, reject) {
+      var done = false;
+      function finish(err, data) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        // 清除全域回呼與 script 標籤
+        try { delete window.google.visualization.Query.setResponse; } catch (e) {}
+        if (script && script.parentNode) script.parentNode.removeChild(script);
+        if (err) reject(err); else resolve(data);
+      }
+      // 建立 gviz 需要的全域回呼命名空間
+      window.google = window.google || {};
+      window.google.visualization = window.google.visualization || {};
+      window.google.visualization.Query = window.google.visualization.Query || {};
+      window.google.visualization.Query.setResponse = function (data) {
+        finish(null, data);
+      };
+      var script = document.createElement("script");
+      script.src = SHEET_URL + Date.now(); // 時間戳避免快取
+      script.async = true;
+      script.onerror = function () { finish(new Error("Script 載入失敗")); };
+      document.head.appendChild(script);
+      // 逾時保護
+      var timer = setTimeout(function () { finish(new Error("讀取逾時")); }, 15000);
+    });
+  }
+
+  function fetchData() {
+    state.loading = true;
+    syncRefreshBtn();
+    hideError();
+
+    return loadViaScript()
+      .then(function (data) {
+        if (!data || !data.table || !Array.isArray(data.table.rows)) {
+          throw new Error("試算表資料格式不符");
+        }
+        state.records = parseRows(data.table.rows);
+        state.loaded = true;
+        state.updatedAt = new Date();
+        renderUpdated();
+      })
+      .catch(function (err) {
+        console.error("讀取試算表失敗：", err);
+        showError(state.loaded ? "更新失敗，仍顯示舊資料。請檢查網路後再試。"
+                               : "讀取試算表失敗，請檢查網路後再試。");
+      })
+      .then(function () {
+        state.loading = false;
+        syncRefreshBtn();
+        renderAll();
+      });
+  }
+
+  /* ========== 渲染 ========== */
+  function weekDays() {
+    return WEEKDAYS.map(function (_, i) { return addDays(state.weekStart, i); });
+  }
+  function recordsOf(dateKey) {
+    return state.records.filter(function (r) { return r.dateKey === dateKey; });
+  }
+  function currentWeekRecords() {
+    var keys = weekDays().map(toKey);
+    return state.records.filter(function (r) { return keys.indexOf(r.dateKey) >= 0; });
+  }
+
+  function renderAll() {
+    var days = weekDays();
+    $("weekRange").textContent = days[0].getFullYear() + "/" + shortMD(days[0]) +
+                                 " – " + shortMD(days[4]);
+    $("thisWeekBtn").hidden = isSameWeek(state.weekStart, new Date());
+    renderLegend();
+    renderEmptyState();
+    renderSkeletonOr(renderDesktopGrid, renderMobileTabs);
+  }
+
+  function renderSkeletonOr(desktopFn, mobileFn) {
+    if (!state.loaded && state.loading) { renderSkeleton(); return; }
+    desktopFn();
+    mobileFn();
+  }
+
+  function renderSkeleton() {
+    var grid = $("grid");
+    grid.innerHTML = "";
+    var corner = document.createElement("div");
+    corner.className = "grid-corner";
+    grid.appendChild(corner);
+    weekDays().forEach(function (d) {
+      var head = document.createElement("div");
+      head.className = "grid-head";
+      head.innerHTML = WEEKDAYS[weekDays().indexOf(d)] +
+        '<span class="date">' + shortMD(d) + "</span>";
+      grid.appendChild(head);
+    });
+    PERIODS.forEach(function () {
+      var lab = document.createElement("div");
+      lab.className = "period-label skeleton-block";
+      lab.style.color = "transparent";
+      lab.textContent = "載入";
+      grid.appendChild(lab);
+      for (var i = 0; i < 5; i++) {
+        var cell = document.createElement("div");
+        cell.className = "cell";
+        cell.innerHTML = '<div class="skeleton-block" style="height:26px;width:70%"></div>';
+        grid.appendChild(cell);
+      }
+    });
+    $("tabs").innerHTML = WEEKDAYS.map(function () {
+      return '<div class="tab skeleton-block" style="min-height:44px"></div>';
+    }).join("");
+    $("cards").innerHTML = '<div class="skeleton-block" style="height:64px"></div>' +
+                           '<div class="skeleton-block" style="height:64px"></div>';
+  }
+
+  function renderLegend() {
+    var carts = [];
+    CART_ORDER.forEach(function (c) { carts.push(c); });
+    state.records.forEach(function (r) {
+      if (carts.indexOf(r.cart) < 0) carts.push(r.cart);
+    });
+    var html = '<span class="legend-title">車號：</span>';
+    html += carts.map(function (c) {
+      return '<span class="badge" style="' + cartBadgeStyle(c) + '">' +
+             '<span class="dot" style="' + cartDotStyle(c) + '"></span>' + escapeHtml(c) + "</span>";
+    }).join("");
+    $("legend").innerHTML = html;
+  }
+
+  function renderEmptyState() {
+    $("emptyState").hidden = currentWeekRecords().length > 0;
+  }
+
+  /* --- 桌面版網格 --- */
+  function renderDesktopGrid() {
+    var grid = $("grid");
+    grid.innerHTML = "";
+    var days = weekDays();
+    var todayKey = state.todayKey;
+
+    var corner = document.createElement("div");
+    corner.className = "grid-corner";
+    grid.appendChild(corner);
+
+    days.forEach(function (d, i) {
+      var head = document.createElement("div");
+      head.className = "grid-head" + (toKey(d) === todayKey ? " today" : "");
+      head.innerHTML = WEEKDAYS[i] + '<span class="date">' + shortMD(d) + "</span>";
+      grid.appendChild(head);
+    });
+
+    PERIODS.forEach(function (p, idx) {
+      var lab = document.createElement("div");
+      lab.className = "period-label" + (idx === 4 ? " is-lunch" : "");
+      lab.textContent = p.label;
+      grid.appendChild(lab);
+
+      days.forEach(function (d) {
+        var dateKey = toKey(d);
+        var cell = document.createElement("div");
+        cell.className = "cell" + (dateKey === todayKey ? " today-col" : "");
+        var recs = recordsOf(dateKey).filter(function (r) { return r.periodIdx === idx; });
+        if (recs.length === 0) {
+          cell.innerHTML = ""; // 空白格不顯示文字
+        } else {
+          recs.forEach(function (r) {
+            var chip = document.createElement("span");
+            chip.className = "chip";
+            chip.style.cssText = cartChipStyle(r.cart);
+            chip.title = r.cart + " · " + r.name;
+            chip.innerHTML = '<span class="dot" style="' + cartDotStyle(r.cart) + '"></span>' +
+                             escapeHtml(r.name) + " · " + escapeHtml(r.cart);
+            cell.appendChild(chip);
+          });
+        }
+        grid.appendChild(cell);
+      });
+    });
+  }
+
+  /* --- 手機版 Tabs + 卡片 --- */
+  function renderMobileTabs() {
+    var tabs = $("tabs");
+    tabs.innerHTML = "";
+    var days = weekDays();
+    days.forEach(function (d, i) {
+      var dateKey = toKey(d);
+      var btn = document.createElement("button");
+      btn.className = "tab" + (dateKey === state.todayKey ? " is-today" : "");
+      btn.setAttribute("role", "tab");
+      btn.setAttribute("aria-selected", String(i === state.selectedDay));
+      btn.setAttribute("tabindex", i === state.selectedDay ? "0" : "-1");
+      btn.innerHTML = WEEKDAYS[i] + '<span class="tab-date">' + shortMD(d) + "</span>";
+      btn.addEventListener("click", function () {
+        state.selectedDay = i;
+        renderMobileTabs();
+        renderMobileCards();
+      });
+      btn.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+          e.preventDefault();
+          var next = (i + (e.key === "ArrowRight" ? 1 : 4)) % 5;
+          state.selectedDay = next;
+          renderMobileTabs();
+          renderMobileCards();
+          tabs.children[next].focus();
+        }
+      });
+      tabs.appendChild(btn);
+    });
+    renderMobileCards();
+  }
+
+  function renderMobileCards() {
+    var container = $("cards");
+    container.innerHTML = "";
+    var dateKey = toKey(weekDays()[state.selectedDay]);
+    var recs = recordsOf(dateKey);
+
+    // 依節次分組渲染：左邊固定第一節～第八節＋午休，右邊顯示該節借用
+    var list = document.createElement("div");
+    list.className = "plist";
+
+    PERIODS.forEach(function (p, idx) {
+      var row = document.createElement("div");
+      row.className = "prow";
+
+      var label = document.createElement("div");
+      label.className = "prow-label" + (idx === 4 ? " is-lunch" : "");
+      label.textContent = p.label;
+      row.appendChild(label);
+
+      var items = document.createElement("div");
+      items.className = "prow-items";
+      var slots = recs.filter(function (r) { return r.periodIdx === idx; });
+      if (slots.length === 0) {
+        var none = document.createElement("span");
+        none.className = "prow-empty";
+        none.textContent = "";
+        items.appendChild(none);
+      } else {
+        slots.forEach(function (r) {
+          var b = document.createElement("div");
+          b.className = "borrow";
+          b.innerHTML =
+            '<span class="badge" style="' + cartBadgeStyle(r.cart) + '">' +
+              '<span class="dot" style="' + cartDotStyle(r.cart) + '"></span>' + escapeHtml(r.cart) +
+            "</span>" +
+            '<span class="borrow-name">' + escapeHtml(r.name) + "</span>";
+          items.appendChild(b);
+        });
+      }
+      row.appendChild(items);
+      list.appendChild(row);
+    });
+
+    container.appendChild(list);
+  }
+
+  /* ========== Header 狀態 ========== */
+  function syncRefreshBtn() {
+    var btn = $("refreshBtn");
+    var icon = $("refreshIcon");
+    btn.disabled = state.loading;
+    if (state.loading) {
+      icon.innerHTML = '<span class="spinner"></span>';
+      $("refreshLabel").textContent = "更新中";
+    } else {
+      icon.textContent = "⟳";
+      $("refreshLabel").textContent = "更新";
+    }
+  }
+  function renderUpdated() {
+    var t = state.updatedAt;
+    $("updatedAt").textContent = t
+      ? "最後更新：" + t.toLocaleString("zh-TW", {
+          month: "numeric", day: "numeric",
+          hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+        })
+      : "";
+  }
+  function showError(msg) {
+    $("errorText").textContent = msg;
+    $("errorBanner").hidden = false;
+  }
+  function hideError() { $("errorBanner").hidden = true; }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /* ========== 事件 ========== */
+  $("prevWeekBtn").addEventListener("click", function () {
+    state.weekStart = addDays(state.weekStart, -7);
+    syncDaySelection();
+    renderAll();
+  });
+  $("nextWeekBtn").addEventListener("click", function () {
+    state.weekStart = addDays(state.weekStart, 7);
+    syncDaySelection();
+    renderAll();
+  });
+  $("thisWeekBtn").addEventListener("click", function () {
+    state.weekStart = mondayOf(new Date());
+    syncDaySelection();
+    renderAll();
+  });
+  $("refreshBtn").addEventListener("click", fetchData);
+  $("errorCloseBtn").addEventListener("click", hideError);
+
+  function syncDaySelection() {
+    var days = weekDays().map(toKey);
+    var ti = days.indexOf(state.todayKey);
+    state.selectedDay = ti >= 0 ? ti : 0;
+  }
+
+  /* ========== 啟動 ========== */
+  function init() {
+    var now = new Date();
+    state.todayKey = toKey(now);
+    state.weekStart = mondayOf(now);
+    syncDaySelection();
+    renderSkeleton();
+    fetchData();
+  }
+  init();
+})();
+</script>
+</body>
+</html>
