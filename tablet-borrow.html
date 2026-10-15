@@ -250,13 +250,37 @@
       margin-bottom: 4px;
     }
 
-    /* ── 3×3 car grid ── */
+    /* ── car grid (3 per row, rows grow if more carts appear) ── */
     .cart-grid-3x3 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, 1fr);
       gap: 2px;
     }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .cart-note {
+      text-align: center;
+      padding: 14px 8px;
+      color: #a08060;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .cart-note.cart-err { color: #b5442f; }
+
+    .cart-retry {
+      border: 1px solid #d4b896;
+      background: #fff;
+      color: #7c5c38;
+      border-radius: 8px;
+      font-size: 11px;
+      padding: 2px 8px;
+      margin-left: 4px;
+      cursor: pointer;
+    }
+
+    .cart-retry:hover { background: #f5efe0; }
 
     .cart-slot {
       border-radius: 4px;
@@ -477,30 +501,38 @@
     <div class="cart-header">
       今日平板車借用
       <div style="font-size:11px; font-weight:400; margin-top:2px;">{{ todayCartDate || '--' }}</div>
-      <div style="font-size:10px; font-weight:400; opacity:0.75; margin-top:2px;">最新狀態請重新整理</div>
+      <div style="font-size:10px; font-weight:400; opacity:0.75; margin-top:2px;">每 2 分鐘自動更新</div>
     </div>
     <div class="cart-body" ref="cartBody">
-      <div v-if="cartLoading" style="text-align:center; padding:20px; color:#a08060; font-size:12px;">
+      <div v-if="cartLoading && todayCartSessions.length === 0" class="cart-note">
         <span style="display:inline-block; width:12px; height:12px; border:2px solid #d4b896; border-top-color:#7c5c38; border-radius:50%; animation:spin 0.7s linear infinite; vertical-align:middle; margin-right:4px;"></span>
         載入中…
       </div>
-      <div v-else-if="todayCartIsWeekend" style="text-align:center; padding:20px; color:#aaa; font-size:12px;">今日為假日</div>
-      <div v-else-if="todayCartSessions.length === 0" style="text-align:center; padding:20px; color:#aaa; font-size:12px;">無資料</div>
+      <div v-else-if="cartError && todayCartSessions.length === 0" class="cart-note cart-err">
+        試算表讀取失敗
+        <button class="cart-retry" @click="loadTodayCart">重試</button>
+      </div>
+      <div v-else-if="todayCartIsWeekend" class="cart-note">今日為假日</div>
       <div v-else>
-        <div v-for="sess in todayCartSessions" :key="sess.session" class="cart-sess" :data-session="sess.session">
-          <div class="cart-sess-label">{{ sess.session === '午' ? '中午' : '第 ' + sess.session + ' 節' }}</div>
+        <div v-if="cartError" class="cart-note cart-err">
+          更新失敗，仍顯示舊資料
+          <button class="cart-retry" @click="loadTodayCart">重試</button>
+        </div>
+        <div v-else-if="!todayCartHasData" class="cart-note">今日平板車無借用紀錄</div>
+        <div v-for="sess in todayCartSessions" :key="sess.key" class="cart-sess" :data-session="sess.key">
+          <div class="cart-sess-label">{{ sess.label }}</div>
           <div class="cart-grid-3x3">
             <div
-              v-for="car in CARS"
-              :key="car.key"
+              v-for="cell in sess.slots"
+              :key="cell.key"
               class="cart-slot"
-              :class="{ booked: getBookedUser(sess.bookings, car.key) }"
-              :style="{ background: car.color }"
-              :title="getBookedUser(sess.bookings, car.key) ? getBookedUser(sess.bookings, car.key) + ' ' + car.label : car.label"
+              :class="{ booked: cell.names.length > 0 }"
+              :style="{ background: cell.color }"
+              :title="cell.names.length > 0 ? cell.names.join('、') + ' ' + cell.label : cell.label"
             >
-              <template v-if="getBookedUser(sess.bookings, car.key)">
-                <span class="slot-user">{{ getBookedUser(sess.bookings, car.key) }}</span>
-                <span class="slot-car">{{ car.label }}</span>
+              <template v-if="cell.names.length > 0">
+                <span class="slot-user">{{ cell.names[0] }}</span>
+                <span class="slot-car">{{ cell.names.length > 1 ? cell.names.length + ' 人 · ' + cell.label : cell.label }}</span>
               </template>
             </div>
           </div>
@@ -566,6 +598,130 @@ const { createApp } = Vue;
 // 部署 Apps Script Web App 後，把網址（結尾為 /exec）貼在這裡
 const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwEZiswS1Fd1_Wv2jziTw_QWuuTwDD8d4Dfsm9BxOMFaeLzoe1rwM2M__1WD9f_Kb5F/exec';
 
+/* ══════════════════════════════════════════════════════
+   今日平板車借用：直接讀取 Google 試算表（不經 API）
+   以 <script> 注入 gviz 回傳的 google.visualization.Query.setResponse(...)
+   —— script 標籤不受 CORS 限制，file:// 直接開啟也能用
+   ══════════════════════════════════════════════════════ */
+const SHEET_ID  = '109YMzNRgbJkgnNmBnwb7dQ3fVTzvIco4zXPYpQDXO8k';
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:json&_=';
+
+const WEEK_LABELS = ['日', '一', '二', '三', '四', '五', '六'];
+
+// 試算表「預定時段」的節次 → 顯示順序（午休排在第四節與第五節之間）
+const SESSION_DEFS = [
+  { key: '1', label: '第 1 節', idx: 0 },
+  { key: '2', label: '第 2 節', idx: 1 },
+  { key: '3', label: '第 3 節', idx: 2 },
+  { key: '4', label: '第 4 節', idx: 3 },
+  { key: '午', label: '中午',   idx: 4 },
+  { key: '5', label: '第 5 節', idx: 5 },
+  { key: '6', label: '第 6 節', idx: 6 },
+  { key: '7', label: '第 7 節', idx: 7 },
+  { key: '8', label: '第 8 節', idx: 8 },
+];
+
+// 試算表中未列於 CARS 的車號，依序套用這些顏色
+const EXTRA_CART_COLORS = ['#F6D9E0', '#DCE7F5', '#E4DEF4', '#FBE7C6', '#DDF0E3', '#F7DEDE', '#E8E3D5', '#D9EFEF'];
+
+function dateKey(d) {
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return d.getFullYear() + '-' + m + '-' + day;
+}
+
+// 支援 20261015 / 2026/10/15 / 2026-10-15 / 2026年10月15日
+function parseDateCell(raw) {
+  if (raw == null) return null;
+  const s = String(raw).trim();
+  const m = s.match(/^(\d{4})\D?(\d{2})\D?(\d{2})$/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  const d = new Date(s);
+  return isNaN(d) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+// 「一」「1」「１」→ 1～8，找不到回 -1
+function normDigit(ch) {
+  const full = '１２３４５６７８';
+  const half = '12345678';
+  const cn   = '一二三四五六七八';
+  let i = full.indexOf(ch); if (i >= 0) return i + 1;
+  i = half.indexOf(ch);     if (i >= 0) return i + 1;
+  i = cn.indexOf(ch);       if (i >= 0) return i + 1;
+  return -1;
+}
+
+// 解析「預定時段」：支援「第三節, 第五節」「午休」等寫法，回傳 SESSION_DEFS 的 idx
+function parseSlots(raw) {
+  if (raw == null) return [];
+  const idxs = {};
+  String(raw).split(/[,，、;；\n]/).forEach(part => {
+    part = part.trim();
+    if (!part) return;
+    if (part.indexOf('午休') >= 0 || part.indexOf('中午') >= 0) { idxs[4] = true; return; }
+    const m = part.match(/([0-9１-８一二三四五六七八])\s*[節节课課]?/);
+    if (!m) return;
+    const n = normDigit(m[1]);
+    if (n >= 1 && n <= 8) idxs[n <= 4 ? n - 1 : n] = true; // 午休佔一列，五～八節往後移一位
+  });
+  return Object.keys(idxs).map(Number).sort((a, b) => a - b);
+}
+
+// 讀取 gviz：注入 <script> 取得回呼資料（避免 CORS / file:// 被擋）
+function loadSheetRows() {
+  return new Promise((resolve, reject) => {
+    let done = false;
+    let timer = null;
+    let script = null;
+    const finish = (err, data) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      try { delete window.google.visualization.Query.setResponse; } catch (e) {}
+      if (script && script.parentNode) script.parentNode.removeChild(script);
+      if (err) reject(err);
+      else resolve(data);
+    };
+    window.google = window.google || {};
+    window.google.visualization = window.google.visualization || {};
+    window.google.visualization.Query = window.google.visualization.Query || {};
+    window.google.visualization.Query.setResponse = data => finish(null, data);
+    script = document.createElement('script');
+    script.src = SHEET_URL + Date.now(); // 時間戳避免快取
+    script.async = true;
+    script.onerror = () => finish(new Error('試算表 script 載入失敗'));
+    document.head.appendChild(script);
+    timer = setTimeout(() => finish(new Error('讀取試算表逾時')), 15000);
+  }).then(data => {
+    if (!data || !data.table || !Array.isArray(data.table.rows)) throw new Error('試算表資料格式不符');
+    return data.table.rows;
+  });
+}
+
+// 試算表欄位：A 姓名 / B 預定時段日期 / C 預定時段 / D 平板車名稱
+function parseSheetRecords(rows) {
+  const seen = new Set();
+  const out = [];
+  const val = (row, i) => {
+    const c = row.c && row.c[i];
+    return c && c.v != null ? c.v : '';
+  };
+  rows.forEach(row => {
+    const name = String(val(row, 0)).trim();
+    const cart = String(val(row, 3)).trim();
+    const date = parseDateCell(val(row, 1));
+    if (!name || !cart || !date) return;
+    const key = dateKey(date);
+    parseSlots(val(row, 2)).forEach(idx => {
+      const id = key + '|' + idx + '|' + name + '|' + cart;
+      if (seen.has(id)) return; // 去重
+      seen.add(id);
+      out.push({ name, cart, dateKey: key, periodIdx: idx });
+    });
+  });
+  return out;
+}
+
 createApp({
   data() {
     return {
@@ -582,11 +738,15 @@ createApp({
       historyList: [],
       nameHistory: [],
 
-      // 今日平板車借用
+      // 今日平板車借用（資料來源：Google 試算表）
       todayCartSessions: [],
       todayCartDate: '',
       todayCartIsWeekend: false,
+      todayCartHasData: false,
       cartLoading: false,
+      cartError: false,
+      cartTimer: null,
+      cartScrolledOnce: false,
       CARS: [
         { key: 'A',      label: 'A車',    color: '#FFD1DC' },
         { key: 'B',      label: 'B車',    color: '#B3E5FC' },
@@ -684,7 +844,7 @@ createApp({
     // ── 呼叫 Apps Script 後端（GET 用於讀取，POST 用於寫入）──
     // POST 用 text/plain 避免觸發 CORS 預檢請求
     gs(fnName, ...args) {
-      const isRead = fnName === 'getAllData' || fnName === 'getTodayCartData';
+      const isRead = fnName === 'getAllData';
       const req = isRead
         ? fetch(`${GAS_WEB_APP_URL}?action=${fnName}`)
         : fetch(GAS_WEB_APP_URL, {
@@ -761,29 +921,60 @@ createApp({
       window.open('https://ilovekuma.github.io/borrow.github.io/tabletCart', '_blank');
     },
 
-    // ── 今日平板車借用 ──
-    getBookedUser(bookings, carKey) {
-      for (const b of bookings) {
-        const m = b.match(/^(.+?)\s+(\S+?)車$/);
-        if (m && m[2] === carKey) return m[1];
-      }
-      return null;
+    // ── 今日平板車借用（試算表資料）──
+    // 把今日紀錄組成「節次 → 車格」結構；試算表出現的新車號自動併入
+    buildCartSessions(records) {
+      const defs = this.CARS.map(c => ({ ...c }));
+      const known = new Set(defs.map(c => c.label));
+      let i = 0;
+      records.forEach(r => {
+        if (known.has(r.cart)) return;
+        known.add(r.cart);
+        defs.push({
+          key: 'x-' + r.cart,
+          label: r.cart,
+          color: EXTRA_CART_COLORS[i++ % EXTRA_CART_COLORS.length]
+        });
+      });
+      return SESSION_DEFS.map(def => ({
+        key: def.key,
+        label: def.label,
+        slots: defs.map(c => ({
+          key: c.key,
+          label: c.label,
+          color: c.color,
+          names: records
+            .filter(r => r.periodIdx === def.idx && r.cart === c.label)
+            .map(r => r.name)
+        }))
+      }));
     },
 
     async loadTodayCart() {
+      if (this.cartLoading) return; // 同一次讀取中不重複發送
+      const now = new Date();
+      this.todayCartDate = (now.getMonth() + 1) + '/' + now.getDate() + '（週' + WEEK_LABELS[now.getDay()] + '）';
+      this.todayCartIsWeekend = now.getDay() === 0 || now.getDay() === 6;
       this.cartLoading = true;
+      this.cartError = false;
       try {
-        const result = await this.gs('getTodayCartData');
-        this.todayCartDate      = result.date;
-        this.todayCartIsWeekend = result.isWeekend;
-        this.todayCartSessions  = result.sessions || [];
-      } catch(e) {
+        const rows = await loadSheetRows();
+        const today = dateKey(now);
+        const records = parseSheetRecords(rows).filter(r => r.dateKey === today);
+        this.todayCartSessions = this.buildCartSessions(records);
+        this.todayCartHasData = records.length > 0;
+      } catch (e) {
         console.error('平板車借用載入失敗', e);
+        this.cartError = true;
       } finally {
         this.cartLoading = false;
       }
       await this.$nextTick();
-      this.scrollCartToNoonIfAfternoon();
+      // 只在首次載入時設定初始捲動位置（過中午後捲到中午之後的節次）
+      if (!this.cartScrolledOnce) {
+        this.cartScrolledOnce = true;
+        this.scrollCartToNoonIfAfternoon();
+      }
     },
 
     // 過中午後，今日平板車借用欄位預設捲動到下半部（中午之後的節次），
@@ -817,7 +1008,13 @@ createApp({
     if (n) try { this.nameHistory = JSON.parse(n); } catch(e) {}
     this.loadFromApi();
     this.loadTodayCart();
+    // 試算表資料每 2 分鐘自動更新一次
+    this.cartTimer = setInterval(() => this.loadTodayCart(), 120000);
     this.scheduleNoonRefresh();
+  },
+
+  beforeUnmount() {
+    clearInterval(this.cartTimer);
   }
 }).mount('#app');
 </script>
